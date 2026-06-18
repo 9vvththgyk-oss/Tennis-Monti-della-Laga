@@ -1,0 +1,11 @@
+{
+  "name": "prenotazioni-tennis-condominio",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node api/bookings.js"
+  },
+  "dependencies": {
+    "@vercel/postgres": "latest"
+  }
+}
