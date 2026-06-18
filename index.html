@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Prenotazioni Tennis Monti della Laga</title>
+<meta name="viewport" content="width=device-width, initial-scale=0.72, minimum-scale=0.35, maximum-scale=3.0, user-scalable=yes">
+<style>
+    :root {
+        --primary: #1e8e3e;
+        --booked: #d4edda;
+        --border: #e0e0e0;
+        --hour-col: 48px;
+        --day-col: 86px;
+    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background: #f5f7f5; color: #333; }
+    h1 { color: var(--primary); text-align: center; margin: 0; font-size: 24px; line-height: 1.15; }
+    .header { background: white; padding: 12px 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 12px; text-align: center; }
+    .status { text-align:center; margin: 6px 0 9px; font-size: 13px; color: #555; }
+    .past-control { display: flex; justify-content: flex-start; align-items: center; max-width: 100%; margin: 0 0 10px; }
+    .past-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: #426b49;
+        cursor: pointer;
+        font-size: 13px;
+        padding: 6px 8px;
+        transition: background .2s ease, color .2s ease;
+    }
+    .past-toggle-btn:hover { background: rgba(30,142,62,.08); color: var(--primary); }
+    .past-toggle-btn:active { background: rgba(30,142,62,.14); }
+    .toggle-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef8ef;
+        transition: transform .28s ease, background .2s ease;
+    }
+    .past-toggle-btn[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
+    .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        scroll-behavior: smooth;
+        touch-action: pan-x pan-y pinch-zoom;
+    }
+    #calendar { transition: transform .34s ease; }
+    #calendar.sheet-moving { transform: translateX(10px); }
+    table { border-collapse: collapse; width: max-content; min-width: 100%; background: white; }
+    th, td { border: 1px solid var(--border); text-align: center; padding: 5px 3px; height: 34px; }
+    th { background: var(--primary); color: white; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+    th:first-child, td:first-child { position: sticky; left: 0; z-index: 11; }
+    th:first-child { background: var(--primary); width: var(--hour-col); min-width: var(--hour-col); max-width: var(--hour-col); }
+    td:first-child { background: #f1f3f1; font-weight: bold; color: #333; width: var(--hour-col); min-width: var(--hour-col); max-width: var(--hour-col); }
+    th:not(:first-child), td:not(:first-child) { width: var(--day-col); min-width: var(--day-col); max-width: var(--day-col); }
+    td { background: white; }
+    .past-day { opacity: .92; }
+    .today-col { box-shadow: inset 0 0 0 2px rgba(255,255,255,.28); }
+    td.today-col { box-shadow: inset 0 0 0 2px rgba(30,142,62,.12); }
+    select { width: 100%; min-width: 0; padding: 5px 1px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 12px; text-align: center; text-align-last: center; white-space: nowrap; overflow: hidden; font-weight: 500; }
+    select:disabled { opacity: .65; }
+    .booked { background-color: var(--booked) !important; }
+    .rules { margin: 10px auto 0; max-width: 820px; background: white; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.45; box-shadow: 0 3px 10px rgba(0,0,0,.08); font-weight: 400; color: #333; }
+    .rules p { margin: 0; }
+    @media (max-width: 768px) {
+        :root { --hour-col: 44px; --day-col: 82px; }
+        body { padding: 7px; }
+        h1 { font-size: 20px; }
+        table { font-size: 12px; }
+        th, td { padding: 4px 2px; height: 32px; }
+        select { padding: 4px 1px; min-height: 28px; font-size: 11px; }
+        .past-toggle-btn { font-size: 13px; padding: 7px 10px; }
+    }
+    @media (max-width: 420px) {
+        :root { --hour-col: 42px; --day-col: 78px; }
+        h1 { font-size: 18px; }
+        body { padding: 6px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Prenotazioni Tennis Monti della Laga</h1>
+</div>
+
+<div id="status" class="status">Caricamento prenotazioni condivise...</div>
+<div class="past-control">
+    <button type="button" id="pastToggle" class="past-toggle-btn" aria-expanded="false"><span class="toggle-icon">‹</span><span id="pastToggleText">Mostra giorni precedenti</span></button>
+</div>
+<div class="table-wrap" id="tableWrap"><table id="calendar"></table></div>
+<div class="rules">
+    <p>
+Regole: massimo 2 ore al giorno per nominativo.<br>
+Non si può aggiungere una prenotazione se, nei 5 giorni fino alla data scelta compresa, quel nominativo ha già 4 ore prenotate.<br>
+Il Torneo Condominiale non rientra nei limiti.<br>
+Il pulsante sopra la tabella mostra o nasconde i 7 giorni precedenti.
+</p>
+</div>
+
+<script>
+const surnames = [
+    "AZZARO","AZZOLINI Antonella","BERNARDIS / Di BARTOLOMEI",
+    "BRUNO/AZZOLINI","CAMPLANI","CARPINELLI","CHUNG","COSTANTINI",
+    "CUPPARI","D'AMOJA","DE ANTONI","DE BELLO","DE BIASE",
+    "DE GREGORIO","DI BARTOLOMEI","DI NAPOLI","FISCHER",
+    "GALLIZIOLI / MARENZANA","GALLIZIOLI Paola","GIORGINI",
+    "GRANDOLINI","LANARI","LAZZARI","LEFEMINE","LEONE",
+    "LOMBARDO Maria Rosaria e Gabriella","LOMBARDO Paola",
+    "MANDELLI","MESSINA Manuela","MESSINA Marco","MORAZZO",
+    "PEPE Francesco","PEPE Valeria","PEZZOLI","PINARELLO",
+    "POCCIONI/ATANASIO","REGGIANI","RINALDI RINCON",
+    "SACCHETTI","SCHIAFFINI","SCHIAVETTI","SINI",
+    "TOMBOLINI","VENTURINI","ZACCARELLI","Torneo Condominiale"
+];
+const hours = Array.from({length: 15}, (_, i) => i + 7);
+let bookings = {};
+let isSaving = false;
+let showPastDays = false;
+
+function formatDate(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+function getDates() {
+    const today = new Date();
+    const dates = [];
+    for (let i = -7; i <= 7; i++) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        d.setDate(d.getDate() + i);
+        dates.push(d);
+    }
+    return dates;
+}
+function getVisibleDates() {
+    const today = new Date();
+    const todayStr = formatDate(today);
+    const allDates = getDates();
+    if (showPastDays) return allDates;
+    return allDates.filter(d => formatDate(d) >= todayStr);
+}
+function adjustSelectFont(select) {
+    const text = select.options[select.selectedIndex]?.text || "";
+    const availableWidth = Math.max(30, select.clientWidth - 8);
+    let size = 12;
+    if (text && text !== "—") {
+        size = Math.floor(availableWidth / Math.max(1, text.length * 0.52));
+        size = Math.max(7, Math.min(12, size));
+    }
+    select.style.fontSize = size + "px";
+    select.title = text === "—" ? "" : text;
+}
+function setStatus(text) { document.getElementById("status").textContent = text; }
+async function loadBookings() {
+    const response = await fetch('/api/bookings', { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Errore caricamento');
+    bookings = data.bookings || {};
+    setStatus('Prenotazioni condivise aggiornate.');
+    render();
+}
+async function saveBooking(key, surname) {
+    isSaving = true;
+    render();
+    const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, surname })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Errore salvataggio');
+    await loadBookings();
+    isSaving = false;
+    render();
+}
+function isPastDate(d) {
+    const today = new Date();
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return dOnly < todayOnly;
+}
+
+function todayScrollLeft() {
+    const wrap = document.getElementById("tableWrap");
+    const todayHeader = document.querySelector("th[data-today='true']");
+    const hourHeader = document.querySelector("th.hour-col");
+    if (!wrap || !todayHeader) return 0;
+    const stickyWidth = hourHeader ? hourHeader.offsetWidth : 0;
+    return Math.max(0, todayHeader.offsetLeft - stickyWidth);
+}
+function updatePastButton() {
+    const btn = document.getElementById("pastToggle");
+    const text = document.getElementById("pastToggleText");
+    if (!btn || !text) return;
+    text.textContent = showPastDays ? "Nascondi giorni precedenti" : "Mostra giorni precedenti";
+    btn.setAttribute("aria-expanded", showPastDays ? "true" : "false");
+}
+function positionCalendar(animate = true) {
+    const wrap = document.getElementById("tableWrap");
+    if (!wrap) return;
+    wrap.style.scrollBehavior = animate ? "smooth" : "auto";
+    wrap.scrollLeft = 0;
+    updatePastButton();
+}
+function animateSheetShift() {
+    const table = document.getElementById("calendar");
+    if (!table) return;
+    table.classList.add("sheet-moving");
+    window.setTimeout(() => table.classList.remove("sheet-moving"), 360);
+}
+
+function render() {
+    const table = document.getElementById("calendar");
+    table.innerHTML = "";
+    const allDates = getVisibleDates();
+
+    let tr = document.createElement("tr");
+    tr.innerHTML = `<th class="hour-col">Ora</th>`;
+    allDates.forEach(d => {
+        const dayName = d.toLocaleDateString("it-IT", {weekday:"short"});
+        const dayNum = d.toLocaleDateString("it-IT", {day:"numeric", month:"short"});
+        const today = !isPastDate(d) && formatDate(d) === formatDate(new Date());
+        tr.innerHTML += `<th data-today="${today ? 'true' : 'false'}" class="${isPastDate(d) ? 'past-day' : ''} ${today ? 'today-col' : ''}">${dayName}<br><small>${dayNum}</small></th>`;
+    });
+    table.appendChild(tr);
+
+    hours.forEach(h => {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td><strong>${String(h).padStart(2, '0')}:00</strong></td>`;
+        allDates.forEach(d => {
+            const dateStr = formatDate(d);
+            const key = `${dateStr}_${h}`;
+            const currentBooking = bookings[key];
+            let td = document.createElement("td");
+            if (isPastDate(d)) td.classList.add("past-day");
+            if (!isPastDate(d) && formatDate(d) === formatDate(new Date())) td.classList.add("today-col");
+            let select = document.createElement("select");
+            select.disabled = isSaving;
+
+            let empty = document.createElement("option");
+            empty.value = "";
+            empty.textContent = "—";
+            select.appendChild(empty);
+
+            surnames.forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = s;
+                opt.textContent = s;
+                select.appendChild(opt);
+            });
+
+            select.value = currentBooking || "";
+            adjustSelectFont(select);
+
+            select.onchange = async () => {
+                const selected = select.value;
+                const oldBooking = bookings[key] || "";
+                if (selected === oldBooking) return;
+                if (!selected && oldBooking && !confirm(`Cancellare definitivamente la prenotazione di ${oldBooking}?`)) {
+                    select.value = oldBooking;
+                    adjustSelectFont(select);
+                    return;
+                }
+                try {
+                    setStatus('Salvataggio in corso...');
+                    await saveBooking(key, selected);
+                } catch (error) {
+                    alert('❌ ' + error.message);
+                    setStatus('Errore: modifica non salvata.');
+                    await loadBookings();
+                } finally {
+                    isSaving = false;
+                    render();
+                }
+            };
+
+            if (currentBooking) td.classList.add("booked");
+            td.appendChild(select);
+            tr.appendChild(td);
+        });
+        table.appendChild(tr);
+    });
+    requestAnimationFrame(() => positionCalendar(false));
+}
+
+document.getElementById("pastToggle").addEventListener("click", () => {
+    showPastDays = !showPastDays;
+    animateSheetShift();
+    render();
+});
+
+loadBookings().catch(error => {
+    setStatus('Errore database: ' + error.message);
+    render();
+});
+setInterval(() => loadBookings().catch(() => {}), 30000);
+</script>
+</body>
+</html>
