@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Prenotazioni Tennis Monti della Laga</title>
+<meta name="viewport" content="width=device-width, initial-scale=0.65, minimum-scale=0.25, maximum-scale=8, user-scalable=yes">
+<style>
+:root{
+    --primary:#1e8e3e;
+    --past-primary:#4f7f56;
+    --booked:#d4edda;
+    --border:#e0e0e0;
+    --hour-col:48px;
+    --day-col:108px;
+}
+*{box-sizing:border-box}
+body{
+    font-family:'Segoe UI',Arial,sans-serif;
+    margin:0;
+    padding:8px;
+    background:#f5f7f5;
+    color:#333;
+}
+.header{
+    background:white;
+    padding:12px 10px;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,.1);
+    margin-bottom:8px;
+    text-align:center;
+}
+h1{
+    color:var(--primary);
+    text-align:center;
+    margin:0;
+    font-size:24px;
+    line-height:1.12;
+    white-space:nowrap;
+}
+.status{
+    text-align:center;
+    margin:8px 0 10px;
+    font-size:14px;
+    color:#555;
+}
+.page-nav{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:8px 0 12px;
+}
+.page-btn{
+    border:1px solid rgba(30,142,62,.25);
+    background:white;
+    color:var(--primary);
+    border-radius:999px;
+    padding:7px 13px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.page-btn.active{
+    background:var(--primary);
+    color:white;
+}
+.site-page{display:none}
+.site-page.active-page{display:block}
+.past-control{
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    max-width:100%;
+    margin:0 0 8px;
+}
+.past-toggle-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    border:0;
+    border-radius:999px;
+    background:transparent;
+    color:#426b49;
+    cursor:pointer;
+    font-size:13px;
+    padding:6px 8px;
+}
+.toggle-icon{
+    width:22px;
+    height:22px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#eef8ef;
+    transition:transform .28s ease;
+}
+.past-toggle-btn[aria-expanded="true"] .toggle-icon{transform:rotate(180deg)}
+.table-wrap{
+    width:100%;
+    overflow-x:auto;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 4px 15px rgba(0,0,0,.1);
+    scroll-behavior:smooth;
+}
+table{
+    border-collapse:collapse;
+    width:max-content;
+    min-width:100%;
+    background:white;
+    font-size:13px;
+}
+th,td{
+    border:1px solid var(--border);
+    text-align:center;
+    padding:3px 2px;
+    height:50px;
+    vertical-align:middle;
+}
+th{
+    background:var(--primary);
+    color:white;
+    font-weight:800;
+    position:sticky;
+    top:0;
+    z-index:10;
+    height:56px;
+    font-size:13px;
+    line-height:1.05;
+}
+th:first-child,td:first-child{
+    position:sticky;
+    left:0;
+    z-index:11;
+}
+th:first-child{
+    background:var(--primary);
+    width:var(--hour-col);
+    min-width:var(--hour-col);
+    max-width:var(--hour-col);
+    font-size:17px;
+}
+td:first-child{
+    background:#f1f3f1;
+    font-weight:800;
+    color:#333;
+    width:var(--hour-col);
+    min-width:var(--hour-col);
+    max-width:var(--hour-col);
+    font-size:16px;
+}
+th:not(:first-child),td:not(:first-child){
+    width:var(--day-col);
+    min-width:var(--day-col);
+    max-width:var(--day-col);
+}
+.day-name{
+    display:block;
+    text-align:center;
+    font-weight:800;
+    font-size:12px;
+    line-height:1.02;
+    white-space:normal;
+    overflow-wrap:anywhere;
+}
+th small{
+    display:block;
+    font-size:12px;
+    line-height:1.05;
+    margin-top:3px;
+}
+td{background:white}
+.booked{background-color:var(--booked)!important}
+.today-col{box-shadow:inset 0 0 0 2px rgba(30,142,62,.12)}
+th.today-col{box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.past-day{opacity:.92}
+.table-wrap th.past-day{
+    background:var(--past-primary)!important;
+    color:white!important;
+    opacity:1;
+}
+.select-box{
+    position:relative;
+    width:100%;
+    height:43px;
+    border:1px solid #ddd;
+    border-radius:6px;
+    background:white;
+    overflow:hidden;
+}
+.selected-text{
+    position:absolute;
+    inset:0 13px 0 3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    white-space:normal;
+    overflow:hidden;
+    line-height:1.02;
+    font-weight:700;
+    font-size:12px;
+    word-break:normal;
+    overflow-wrap:break-word;
+    hyphens:auto;
+}
+.select-box select{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0;
+    cursor:pointer;
+    font-size:16px;
+}
+.select-box::after{
+    content:"⌄";
+    position:absolute;
+    right:5px;
+    top:50%;
+    transform:translateY(-52%);
+    font-size:13px;
+    color:#222;
+    pointer-events:none;
+}
+.rules{
+    margin:90px auto 0;
+    width:min(92vw,1800px);
+    max-width:1800px;
+    background:white;
+    border-radius:14px;
+    padding:24px 32px 26px;
+    font-size:30px;
+    line-height:1.32;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    color:#333;
+    text-align:left;
+}
+.rules h2{
+    margin:0 0 8px;
+    color:#333;
+    font-size:32px;
+    font-weight:800;
+    line-height:1.1;
+    text-align:center;
+}
+.rules p{margin:0}
+.table-wrap.closed-view table{
+    width:100%;
+    min-width:100%;
+}
+.panel{
+    max-width:900px;
+    margin:45px auto 0;
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 4px 15px rgba(0,0,0,.1);
+}
+.panel h2{
+    margin:0 0 16px;
+    color:var(--primary);
+    text-align:center;
+}
+.history-item{
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+    font-size:15px;
+    line-height:1.35;
+}
+.history-item:last-child{border-bottom:0}
+.muted{color:#666;text-align:center}
+.stats-summary{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:16px;
+}
+.stat-card{
+    background:#f5f7f5;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    text-align:center;
+}
+.stat-card strong{
+    display:block;
+    font-size:13px;
+    color:#426b49;
+    margin-bottom:6px;
+}
+.stat-card span{
+    display:block;
+    font-size:22px;
+    font-weight:800;
+}
+.stats-table-wrap{overflow-x:auto}
+.stats-table{
+    width:100%;
+    min-width:560px;
+    border-collapse:collapse;
+}
+.stats-table th,.stats-table td{
+    border:1px solid var(--border);
+    padding:10px;
+    height:auto!important;
+    text-align:center;
+    position:static!important;
+}
+.stats-table td:first-child{
+    width:auto!important;
+    max-width:none!important;
+    min-width:220px!important;
+    text-align:left!important;
+    font-size:14px!important;
+    font-weight:700!important;
+    background:white!important;
+}
+.stats-table th{
+    background:var(--primary);
+    color:white;
+}
+@media(max-width:768px){
+    html{zoom:.82}
+    :root{--hour-col:44px;--day-col:108px}
+    body{padding:6px;overflow-x:auto}
+    h1{font-size:23px}
+    table{min-width:800px}
+    .page-nav{justify-content:center;gap:6px}
+    .page-btn{font-size:13px;padding:6px 10px}
+    .rules{font-size:24px;margin-top:120px;max-width:100%;width:100%;padding:20px 22px}
+    .rules h2{font-size:27px}
+    .stats-summary{grid-template-columns:1fr}
+}
+@media(max-width:430px){
+    html{zoom:.78}
+    :root{--hour-col:42px;--day-col:104px}
+    table{min-width:770px}
+    h1{font-size:22px}
+    .rules{font-size:22px;padding:18px 18px}
+    .rules h2{font-size:25px}
+}
+
+/* Zoom tabella fluido senza transform: sticky stabile */
+.table-wrap{
+    touch-action:pan-x pan-y;
+    overscroll-behavior:contain;
+    --table-scale:1;
+}
+
+/* larghezze reali scalate */
+.table-wrap th:first-child,
+.table-wrap td:first-child{
+    width:calc(var(--hour-col) * var(--table-scale)) !important;
+    min-width:calc(var(--hour-col) * var(--table-scale)) !important;
+    max-width:calc(var(--hour-col) * var(--table-scale)) !important;
+}
+
+.table-wrap th:not(:first-child),
+.table-wrap td:not(:first-child){
+    width:calc(var(--day-col) * var(--table-scale)) !important;
+    min-width:calc(var(--day-col) * var(--table-scale)) !important;
+    max-width:calc(var(--day-col) * var(--table-scale)) !important;
+}
+
+/* dimensioni reali scalate */
+.table-wrap th{
+    height:calc(56px * var(--table-scale)) !important;
+    font-size:calc(13px * var(--table-scale)) !important;
+}
+.table-wrap th:first-child{
+    font-size:calc(17px * var(--table-scale)) !important;
+}
+.table-wrap td{
+    height:calc(50px * var(--table-scale)) !important;
+    font-size:calc(13px * var(--table-scale)) !important;
+}
+.table-wrap td:first-child{
+    font-size:calc(16px * var(--table-scale)) !important;
+}
+.table-wrap .day-name{
+    font-size:calc(12px * var(--table-scale)) !important;
+}
+.table-wrap th small{
+    font-size:calc(12px * var(--table-scale)) !important;
+}
+.table-wrap .select-box{
+    height:calc(43px * var(--table-scale)) !important;
+    border-radius:calc(6px * var(--table-scale)) !important;
+}
+.table-wrap .selected-text{
+    font-size:calc(12px * var(--table-scale)) !important;
+    inset:0 calc(13px * var(--table-scale)) 0 calc(3px * var(--table-scale)) !important;
+}
+.table-wrap .select-box::after{
+    right:calc(5px * var(--table-scale)) !important;
+    font-size:calc(13px * var(--table-scale)) !important;
+}
+
+/* sticky stabile: il contenuto passa sotto intestazione e prima colonna */
+.table-wrap th{
+    position:sticky !important;
+    top:0 !important;
+    z-index:40 !important;
+    background:var(--primary) !important;
+}
+.table-wrap td:first-child{
+    position:sticky !important;
+    left:0 !important;
+    z-index:35 !important;
+    background:#f1f3f1 !important;
+}
+.table-wrap th:first-child{
+    position:sticky !important;
+    top:0 !important;
+    left:0 !important;
+    z-index:60 !important;
+    background:var(--primary) !important;
+}
+.table-wrap td:not(:first-child){
+    position:relative;
+    z-index:1;
+}
+
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Prenotazioni Tennis Monti della Laga</h1>
+</div>
+
+<div id="status" class="status">Caricamento prenotazioni condivise...</div>
+
+<div class="page-nav">
+    <button type="button" class="page-btn active" data-page="calendarPage">Prenotazioni</button>
+    <button type="button" class="page-btn" data-protected-page="historyPage">History</button>
+    <button type="button" class="page-btn" data-protected-page="statsPage">Statistiche</button>
+</div>
+
+<div id="calendarPage" class="site-page active-page">
+    <div class="past-control">
+        <button type="button" id="pastToggle" class="past-toggle-btn" aria-expanded="false">
+            <span class="toggle-icon">‹</span>
+            <span id="pastToggleText">Mostra giorni precedenti</span>
+        </button>
+    </div>
+    <div class="table-wrap" id="tableWrap">
+        <table id="calendar"></table>
+    </div>
+    <div class="rules">
+        <h2>Regole:</h2>
+        <p>Massimo 2 ore al giorno per nominativo.<br>
+        Non si può aggiungere una prenotazione se quel nominativo supera 4 ore in una finestra di 5 giorni<br>
+        consecutivi.<br>
+        Il Torneo Condominiale non rientra nei limiti.<br>
+        Il pulsante sopra la tabella mostra o nasconde i 6 giorni precedenti.</p>
+    </div>
+</div>
+
+<div id="historyPage" class="site-page protected-page">
+    <div class="panel">
+        <h2>History ultime 40 modifiche</h2>
+        <div id="historyList" class="history-list"></div>
+    </div>
+</div>
+
+<div id="statsPage" class="site-page protected-page">
+    <div class="panel">
+        <h2>Statistiche utilizzo campo</h2>
+        <div id="statsSummary" class="stats-summary"></div>
+        <div id="statsTableWrap" class="stats-table-wrap"></div>
+    </div>
+</div>
+
+<script>
+const surnames=[
+    "AZZARO","AZZOLINI Antonella","BERNARDIS / Di BARTOLOMEI",
+    "BRUNO/AZZOLINI","CAMPLANI","CARPINELLI","CHUNG","COSTANTINI",
+    "CUPPARI","D'AMOJA","DE ANTONI","DE BELLO","DE BIASE",
+    "DE GREGORIO","DI BARTOLOMEI","DI NAPOLI","FISCHER",
+    "GALLIZIOLI / MARENZANA","GALLIZIOLI Paola","GIORGINI",
+    "GRANDOLINI","LANARI","LAZZARI","LEFEMINE","LEONE",
+    "LOMBARDO Maria Rosaria e Gabriella","LOMBARDO Paola",
+    "MANDELLI","MESSINA Manuela","MESSINA Marco","MORAZZO",
+    "PEPE Francesco","PEPE Valeria","PEZZOLI","PINARELLO",
+    "POCCIONI/ATANASIO","REGGIANI","RINALDI RINCON",
+    "SACCHETTI","SCHIAFFINI","SCHIAVETTI","SINI",
+    "TOMBOLINI","VENTURINI","ZACCARELLI","Torneo Condominiale"
+];
+const hours=Array.from({length:15},(_,i)=>i+7);
+let bookings={};
+let isSaving=false;
+let showPastDays=false;
+let adminPassword="";
+
+function formatDate(d){
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+}
+function getDates(){
+    const today=new Date();
+    const dates=[];
+    for(let i=-6;i<=6;i++){
+        const d=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+        d.setDate(d.getDate()+i);
+        dates.push(d);
+    }
+    return dates;
+}
+function getVisibleDates(){
+    const todayStr=formatDate(new Date());
+    const allDates=getDates();
+    if(showPastDays)return allDates;
+    return allDates.filter(d=>formatDate(d)>=todayStr);
+}
+function isPastDate(d){
+    const today=new Date();
+    const t=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
+    const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+    return x<t;
+}
+function setStatus(text){document.getElementById("status").textContent=text}
+function updatePastButton(){
+    const btn=document.getElementById("pastToggle");
+    const text=document.getElementById("pastToggleText");
+    text.textContent=showPastDays?"Nascondi giorni precedenti":"Mostra giorni precedenti";
+    btn.setAttribute("aria-expanded",showPastDays?"true":"false");
+}
+function defaultDayColumnWidth(){
+    if(window.innerWidth<=430)return 104;
+    return 108;
+}
+function currentHourColumnWidth(){
+    if(window.innerWidth<=430)return 42;
+    if(window.innerWidth<=768)return 44;
+    return 48;
+}
+function fitClosedTableToScreen(){
+    const root=document.documentElement;
+    const wrap=document.getElementById("tableWrap");
+    if(!wrap)return;
+
+    wrap.classList.toggle("closed-view",!showPastDays);
+
+    const defaultDayCol=defaultDayColumnWidth();
+    if(showPastDays){
+        root.style.setProperty("--day-col",defaultDayCol+"px");
+        return;
+    }
+
+    const visibleDays=getVisibleDates().length;
+    const hourCol=currentHourColumnWidth();
+    const availableWidth=Math.max(0,wrap.clientWidth-hourCol);
+    const fittedDayCol=Math.floor(availableWidth/visibleDays);
+
+    root.style.setProperty("--day-col",Math.max(defaultDayCol,fittedDayCol)+"px");
+}
+async function readJsonResponse(response){
+    const text=await response.text();
+    try{return JSON.parse(text)}
+    catch{return {error:text || "Risposta non valida dal server"}}
+}
+async function loadBookings(){
+    const response=await fetch("/api/bookings",{cache:"no-store"});
+    const data=await readJsonResponse(response);
+    if(!response.ok)throw new Error(data.error || "Errore caricamento");
+    bookings=data.bookings || {};
+    setStatus("Prenotazioni condivise aggiornate.");
+    render();
+}
+async function saveBooking(key,surname){
+    isSaving=true;
+    render();
+    const response=await fetch("/api/bookings",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({key,surname})
+    });
+    const data=await readJsonResponse(response);
+    if(!response.ok)throw new Error(data.error || "Errore salvataggio");
+    bookings=data.bookings || {};
+    isSaving=false;
+    setStatus("Prenotazioni condivise aggiornate.");
+    render();
+}
+function fitTextToTwoLines(){
+    document.querySelectorAll(".selected-text").forEach(el=>{
+        const text=(el.textContent||"").trim();
+        let size=12;
+        if(!text || text==="—"){
+            el.style.fontSize=size+"px";
+            return;
+        }
+        el.style.fontSize=size+"px";
+        const minSize=7.5;
+        const fits=()=>{
+            const lh=parseFloat(getComputedStyle(el).lineHeight);
+            return el.scrollHeight <= lh*2+1 && el.scrollWidth <= el.clientWidth+1;
+        };
+        while(size>minSize && !fits()){
+            size-=.5;
+            el.style.fontSize=size+"px";
+        }
+    });
+}
+function render(){
+    const table=document.getElementById("calendar");
+    table.innerHTML="";
+    const allDates=getVisibleDates();
+
+    let tr=document.createElement("tr");
+    tr.innerHTML='<th class="hour-col">Ora</th>';
+    allDates.forEach(d=>{
+        let dayName=d.toLocaleDateString("it-IT",{weekday:"long"});
+        dayName=dayName.charAt(0).toUpperCase()+dayName.slice(1);
+        const dayNum=d.toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+        const today=!isPastDate(d) && formatDate(d)===formatDate(new Date());
+        tr.innerHTML+=`<th data-today="${today?'true':'false'}" class="${isPastDate(d)?'past-day':''} ${today?'today-col':''}">
+            <span class="day-name">${dayName}</span>
+            <small>${dayNum}</small>
+        </th>`;
+    });
+    table.appendChild(tr);
+
+    hours.forEach(h=>{
+        const row=document.createElement("tr");
+        row.innerHTML=`<td><strong>${String(h).padStart(2,"0")}:00</strong></td>`;
+        allDates.forEach(d=>{
+            const dateStr=formatDate(d);
+            const key=`${dateStr}_${h}`;
+            const currentBooking=bookings[key] || "";
+            const td=document.createElement("td");
+            if(currentBooking)td.classList.add("booked");
+            if(isPastDate(d))td.classList.add("past-day");
+            if(!isPastDate(d) && dateStr===formatDate(new Date()))td.classList.add("today-col");
+
+            const box=document.createElement("div");
+            box.className="select-box";
+
+            const visible=document.createElement("div");
+            visible.className="selected-text";
+            visible.textContent=currentBooking || "—";
+            visible.title=currentBooking || "";
+
+            const select=document.createElement("select");
+            const lockedPastDay=isPastDate(d);
+            select.disabled=isSaving || lockedPastDay;
+            if(lockedPastDay){
+                box.title=currentBooking
+                    ? "Le prenotazioni dei giorni passati non possono essere cancellate"
+                    : "Non si possono aggiungere prenotazioni nei giorni passati";
+            }
+
+            const empty=document.createElement("option");
+            empty.value="";
+            empty.textContent="—";
+            select.appendChild(empty);
+
+            surnames.forEach(s=>{
+                const opt=document.createElement("option");
+                opt.value=s;
+                opt.textContent=s;
+                select.appendChild(opt);
+            });
+
+            select.value=currentBooking;
+
+            select.onchange=async()=>{
+                const selected=select.value;
+                const oldBooking=bookings[key] || "";
+                if(selected===oldBooking)return;
+
+                if(oldBooking && selected){
+                    alert("Questa cella è già prenotata");
+                    select.value=oldBooking;
+                    return;
+                }
+
+                if(!selected && oldBooking && !confirm(`Cancellare definitivamente la prenotazione di ${oldBooking}?`)){
+                    select.value=oldBooking;
+                    return;
+                }
+
+                try{
+                    setStatus("Salvataggio in corso...");
+                    await saveBooking(key,selected);
+                }catch(error){
+                    alert("❌ "+error.message);
+                    setStatus("Errore: modifica non salvata.");
+                    isSaving=false;
+                    await loadBookings().catch(()=>render());
+                }
+            };
+
+            box.appendChild(visible);
+            box.appendChild(select);
+            td.appendChild(box);
+            row.appendChild(td);
+        });
+        table.appendChild(row);
+    });
+
+    fitClosedTableToScreen();
+    updatePastButton();
+    requestAnimationFrame(fitTextToTwoLines);
+}
+document.getElementById("pastToggle").addEventListener("click",()=>{
+    showPastDays=!showPastDays;
+    render();
+});
+
+async function apiProtected(url){
+    if(!adminPassword){
+        adminPassword=prompt("Inserisci la password:") || "";
+    }
+    const response=await fetch(url,{cache:"no-store",headers:{"x-admin-password":adminPassword}});
+    const data=await readJsonResponse(response);
+    if(response.status===401){
+        adminPassword="";
+        throw new Error("Password errata.");
+    }
+    if(!response.ok)throw new Error(data.error || "Errore caricamento");
+    return data;
+}
+async function renderHistory(){
+    const container=document.getElementById("historyList");
+    container.innerHTML='<p class="muted">Caricamento history...</p>';
+    try{
+        const data=await apiProtected("/api/history");
+        const history=data.history || [];
+        if(!history.length){
+            container.innerHTML='<p class="muted">Nessuna modifica registrata.</p>';
+            return;
+        }
+        container.innerHTML=history.slice(0,40).map(item=>`
+            <div class="history-item">
+                <strong>${new Date(item.ts).toLocaleDateString("it-IT")}</strong><br>
+                ${item.text}
+            </div>
+        `).join("");
+    }catch(error){
+        container.innerHTML=`<p class="muted">${error.message}</p>`;
+    }
+}
+async function renderStats(){
+    const summary=document.getElementById("statsSummary");
+    const tableWrap=document.getElementById("statsTableWrap");
+    summary.innerHTML='<div class="stat-card"><strong>Caricamento</strong><span>...</span></div>';
+    tableWrap.innerHTML="";
+    try{
+        const data=await apiProtected("/api/stats");
+        const stats=data.stats || {};
+        summary.innerHTML=`
+            <div class="stat-card"><strong>Media ore settimanali da sempre</strong><span>${Number(stats.averageWeeklyHours || 0).toFixed(1)}</span></div>
+            <div class="stat-card"><strong>Totale ore giocate da sempre</strong><span>${Number(stats.totalHoursAllTime || 0)}</span></div>
+            <div class="stat-card"><strong>Totale settimane passate</strong><span>${Number(stats.totalPastWeeks || 0)}</span></div>
+        `;
+        const rows=(stats.byName || []).map(row=>`
+            <tr>
+                <td>${row.name}</td>
+                <td>${row.totalHours}</td>
+            </tr>
+        `).join("");
+        tableWrap.innerHTML=`
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Nominativo</th>
+                        <th>Ore giocate da sempre</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }catch(error){
+        summary.innerHTML='<div class="stat-card"><strong>Errore</strong><span>!</span></div>';
+        tableWrap.innerHTML=`<p class="muted">${error.message}</p>`;
+    }
+}
+function showPage(pageId){
+    document.querySelectorAll(".site-page").forEach(p=>p.classList.remove("active-page"));
+    document.getElementById(pageId).classList.add("active-page");
+    document.querySelectorAll(".page-btn").forEach(btn=>{
+        btn.classList.remove("active");
+        if(btn.dataset.page===pageId || btn.dataset.protectedPage===pageId)btn.classList.add("active");
+    });
+    if(pageId==="historyPage")renderHistory();
+    if(pageId==="statsPage")renderStats();
+}
+document.querySelectorAll(".page-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+        const protectedPage=btn.dataset.protectedPage;
+        if(protectedPage){
+            showPage(protectedPage);
+            return;
+        }
+        showPage(btn.dataset.page);
+    });
+});
+
+loadBookings().catch(error=>{
+    setStatus("Errore database: "+error.message);
+    render();
+});
+setInterval(()=>loadBookings().catch(()=>{}),30000);
+window.addEventListener("resize",()=>{
+    fitClosedTableToScreen();
+    fitTextToTwoLines();
+});
+window.addEventListener("orientationchange",()=>setTimeout(()=>{
+    fitClosedTableToScreen();
+    fitTextToTwoLines();
+},250));
+</script>
+
+<script>
+const tableWrapZoom = document.getElementById("tableWrap");
+
+let tableScale = 1;
+let targetTableScale = 1;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+let pinchContentX = 0;
+let pinchContentY = 0;
+let pinchMidX = 0;
+let pinchMidY = 0;
+let zoomFrame = null;
+let isPinchingTable = false;
+let lastFitScale = 1;
+
+const MIN_TABLE_SCALE = 1;
+const MAX_TABLE_SCALE = 4;
+const ZOOM_SMOOTHING = 0.32;
+
+function clampTableZoom(value){
+    return Math.max(MIN_TABLE_SCALE, Math.min(value, MAX_TABLE_SCALE));
+}
+
+function zoomTouchDistance(t1,t2){
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+}
+
+function zoomTouchMidpoint(t1,t2){
+    return {
+        x:(t1.clientX + t2.clientX) / 2,
+        y:(t1.clientY + t2.clientY) / 2
+    };
+}
+
+function setTableScale(value){
+    tableScale = clampTableZoom(value);
+    tableWrapZoom.style.setProperty("--table-scale", tableScale.toFixed(4));
+
+    if(Math.abs(tableScale - lastFitScale) > 0.08){
+        lastFitScale = tableScale;
+        requestAnimationFrame(fitTextToTwoLines);
+    }
+}
+
+function keepPinchPointStill(){
+    const rect = tableWrapZoom.getBoundingClientRect();
+    tableWrapZoom.scrollLeft = (pinchContentX * tableScale) - (pinchMidX - rect.left);
+    tableWrapZoom.scrollTop = (pinchContentY * tableScale) - (pinchMidY - rect.top);
+}
+
+function animateTableZoom(){
+    zoomFrame = null;
+
+    const diff = targetTableScale - tableScale;
+
+    if(Math.abs(diff) < 0.003){
+        setTableScale(targetTableScale);
+        if(isPinchingTable) keepPinchPointStill();
+        return;
+    }
+
+    setTableScale(tableScale + diff * ZOOM_SMOOTHING);
+    if(isPinchingTable) keepPinchPointStill();
+
+    zoomFrame = requestAnimationFrame(animateTableZoom);
+}
+
+function requestTableZoomAnimation(){
+    if(!zoomFrame){
+        zoomFrame = requestAnimationFrame(animateTableZoom);
+    }
+}
+
+tableWrapZoom.addEventListener("touchstart", e=>{
+    if(e.touches.length === 2){
+        e.preventDefault();
+
+        isPinchingTable = true;
+
+        const rect = tableWrapZoom.getBoundingClientRect();
+        const mid = zoomTouchMidpoint(e.touches[0], e.touches[1]);
+
+        pinchStartDistance = zoomTouchDistance(e.touches[0], e.touches[1]);
+        pinchStartScale = tableScale;
+        targetTableScale = tableScale;
+
+        pinchMidX = mid.x;
+        pinchMidY = mid.y;
+
+        pinchContentX = (tableWrapZoom.scrollLeft + (mid.x - rect.left)) / tableScale;
+        pinchContentY = (tableWrapZoom.scrollTop + (mid.y - rect.top)) / tableScale;
+    }
+},{passive:false});
+
+tableWrapZoom.addEventListener("touchmove", e=>{
+    if(e.touches.length === 2 && isPinchingTable){
+        e.preventDefault();
+
+        const mid = zoomTouchMidpoint(e.touches[0], e.touches[1]);
+        const newDistance = zoomTouchDistance(e.touches[0], e.touches[1]);
+
+        pinchMidX = mid.x;
+        pinchMidY = mid.y;
+
+        const rawScale = pinchStartScale * (newDistance / pinchStartDistance);
+
+        /*
+          Curva più morbida:
+          - mantiene minimo 1x
+          - evita salti bruschi
+          - rende il pinch più controllabile su smartphone
+        */
+        targetTableScale = clampTableZoom(rawScale);
+
+        requestTableZoomAnimation();
+    }
+},{passive:false});
+
+tableWrapZoom.addEventListener("touchend", e=>{
+    if(e.touches.length < 2){
+        isPinchingTable = false;
+        targetTableScale = clampTableZoom(targetTableScale);
+        requestTableZoomAnimation();
+        requestAnimationFrame(fitTextToTwoLines);
+    }
+},{passive:false});
+
+const renderOriginalForSmoothZoom = render;
+render = function(){
+    renderOriginalForSmoothZoom();
+    requestAnimationFrame(()=>{
+        setTableScale(tableScale);
+        fitTextToTwoLines();
+    });
+};
+
+window.addEventListener("resize", ()=>{
+    fitClosedTableToScreen();
+    setTableScale(tableScale);
+    fitTextToTwoLines();
+});
+
+window.addEventListener("orientationchange", ()=>{
+    setTimeout(()=>{
+        fitClosedTableToScreen();
+        setTableScale(tableScale);
+        fitTextToTwoLines();
+    },250);
+});
+
+setTableScale(1);
+</script>
+
+</body>
+</html>
+
+<style>
+.stats-summary{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    max-width:900px;
+    margin-left:auto;
+    margin-right:auto;
+}
+.stat-card span{
+    font-size:26px !important;
+}
+@media(max-width:768px){
+    .stats-summary{grid-template-columns:1fr !important;}
+}
+</style>
+
+<style>
+/* Zoom più libero su smartphone */
+html, body{
+    touch-action: pan-x pan-y;
+}
+
+@media (max-width:768px){
+    html{
+        zoom:0.72 !important;
+    }
+}
+
+@media (max-width:430px){
+    html{
+        zoom:0.68 !important;
+    }
+}
+</style>
